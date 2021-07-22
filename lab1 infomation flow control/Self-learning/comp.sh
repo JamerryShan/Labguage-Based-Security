@@ -1,0 +1,1 @@
+/Troupe/bin/troupec test.trp -o test.js

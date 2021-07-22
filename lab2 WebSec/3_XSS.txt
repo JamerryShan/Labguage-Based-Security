@@ -1,0 +1,10 @@
+In the thread post page such as http://localhost:3000/createThread/meta
+
+In the thread's body, use double <script to bypass the filter: 
+<script<script>alert('XSS')</script>
+
+Fixing:
+We can use a library called XSS to filter the thread.body:
+const XSS = require('xss')
+
+thread.body = XSS(thread.body);

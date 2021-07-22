@@ -1,0 +1,131 @@
+import lists
+
+let 
+    (*function for appending element to the list*)
+    fun append ([], l) = [l]
+        | append (h::t, l) = h::append(t, l)
+
+    (*function to check the match betweet new user and already-registered users*)
+    fun checkNewMatch(userProfilesList, currentProfile, isMatched, numOfMatching) =
+        case userProfilesList of 
+            user_itr::userProfilesList_ => (*when not all the registered users are checked*)
+                let 
+                    val (lev, name, year, gender, interests, agent, pid) = currentProfile
+                    val (lev_, name_, year_, gender_, interests_, agent_, pid_) = user_itr
+                    val _ = print("DEBUG: Start to check candidate: " ^ name_)
+
+                    val to_send = 
+                        let pini authority
+                            val (preference, _) = agent((lev_, name_, year_, gender_, interests_))
+                            val (preference_, _) = agent_((lev, name, year, gender, interests))
+                            val is_send = if(preference andalso preference_) then true else false
+                        in
+                            is_send
+                        end
+                    val to_send_ = declassify(to_send , authority, {})
+                in
+                    if(to_send_)(*if both are satisfied with each other*)
+                        then
+                            let 
+                                val name1 = declassify(name , authority, {}) raisedTo lev_
+                                val year1 = declassify(year , authority, {}) raisedTo lev_
+                                val gender1 = declassify(gender , authority, {}) raisedTo lev_
+                                val interests1 = declassify(interests , authority, {}) raisedTo lev_
+                                val name_1 = declassify(name_ , authority, {}) raisedTo lev
+                                val year_1 = declassify(year_ , authority, {}) raisedTo lev
+                                val gender_1 = declassify(gender_ , authority, {}) raisedTo lev
+                                val interests_1 = declassify(interests_ , authority, {}) raisedTo lev
+                            in
+                                print("DEBUG: Matching between " ^ name ^ " and " ^ name_ ^ " succeed!");
+
+                                (*send profile to each other*)
+                                send(pid, ("NEWMATCH", (lev_, name_1, year_1, gender_1, interests_1)));
+                                send(pid_, ("NEWMATCH", (lev, name1, year1, gender1, interests1)));
+                                checkNewMatch(userProfilesList_, currentProfile, true, numOfMatching+1)
+                            end
+                        else
+                            print("DEBUG: Matching between " ^ name ^ " and " ^ name_ ^ " failed!");
+                            checkNewMatch(userProfilesList_, currentProfile, isMatched, numOfMatching)
+                end
+          | [] => (*when all the registered users are checked*)
+                if(isMatched)
+                then
+                    let 
+                        val (_, name, _, _, _, _, _) = currentProfile
+                    in
+                        print("------------------matching result------------------------------");
+                        print("client " ^ name );
+                        print("number of matches: ");
+                        print(numOfMatching)
+                    end
+                else 
+                    let 
+                        val (_, name, _, _, _, _, pid) = currentProfile
+                    in
+                        print("------------------matching result------------------------------");
+                        print("client " ^ name );
+                        print("number of matches: ");
+                        print(numOfMatching);
+                        send(pid, ("NOMATCH"))
+                    end
+          | _ => 
+                print("matching error!") (*shouldn't come here*)
+
+    (*server loop*)
+    fun server(userProfilesList) = 
+         let
+            val newUser = receive([                        
+                            hn ("NEWPROFILE",((lev, name, year, gender, interests), agent, pid)) => 
+                            let
+                                val _ = print("DEBUG: New profile from " ^ name ^ " received!")
+                                (*val _ = print(year)
+                                val _ = print(interests)
+                                val _ = print(gender)*)
+                               	val _ = print(gender)
+                                val userProfilesList_ = append(userProfilesList, (  lev,
+                                                                                    name , 
+                                                                                    year , 
+                                                                                    gender , 
+                                                                                    interests , 
+                                                                                    agent, 
+                                                                                    pid))
+                            in
+                                checkNewMatch(userProfilesList, (lev, name, year, gender, interests, agent, pid), false, 0);
+                                print("-----------------matching for " ^ name ^ " finished---------------------------------"); 
+                                print(); 
+                                print();
+                                server(userProfilesList_)
+                            end
+                        ])
+        in 
+            ()
+        end
+(*
+    fun main () =       
+        let 
+            val nodeId = spawn(fn () => server([]))
+            val _ = register ("datingServer", nodeId, authority)
+            val thisNode = node(nodeId)
+            val _ = print("server starts! Waiting for new profile.")
+            val _ = send (whereis ("@dispatcher", "dispatcher"), ("DISPATCH", thisNode))
+            val _ =print(); 
+            print()
+            
+            fun loop() = loop()
+        in 
+            loop()
+        end
+*)
+
+    fun main () =       
+        let val thisNode = node (self ())
+            val _ = printString ("Running node with identifier: " ^ thisNode)
+            val _ =  register ("datingServer", spawn(fn () => server([])), authority)
+            val _ = send (whereis ("@dispatcher", "dispatcher"), ("DISPATCH", thisNode))
+        in  
+            ()
+        end
+
+in 
+    main ()
+end

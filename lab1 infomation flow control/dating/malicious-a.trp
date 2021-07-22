@@ -1,0 +1,63 @@
+(* Placeholder for the dating-client. Note that in order to communicate 
+   with your server you will need to create the corresponding trustmap *)
+   
+let 
+	val lev = {alice}
+	val name = "alice" raisedTo lev
+	val year = 1997 raisedTo lev
+	val gender = true raisedTo lev
+	val interests = ["bike", "ping pong"] raisedTo lev
+
+	fun agent(lev, name, year, gender, interests) =
+		let 
+			val client_addr = whereis("QmQfEcv2dV79qY7xj26QBNQUzg42WmCE4WFSymo5x5qX2S","alice") 
+			val _ = send(client_addr, ("new", lev))
+			val _ = if (name = "Eddard") then sleep 3000 else ()
+		in
+			if(false) 
+			then 
+				(true, (lev, name, year, gender, interests)) 
+			else 
+				(false, ())
+		end
+
+	val server_addr = whereis ("QmTi7KZUeWG8rgamV2tdU7FdED7GZ8MubPQc6fcpNeyQVJ", "datingServer")
+	val _ = send(server_addr, ("NEWPROFILE", ((lev, name, year, gender, interests), agent, self())))
+	val _ = register("alice", self(), authority)
+	val FirstTime = getTime()
+	fun startClient(FirstTime) = receive[
+							hn ("NEWMATCH", (lev, name, year, gender, interests)) => 
+								let 
+									val _ = print("--------------------------new match---------------------------")
+									val _ = print(name)
+									val _ = print(year)
+									val _ = if(gender) then print("male") else print("female")
+									val _ = print(interests)
+								in
+									startClient()
+								end,
+							hn ("NOMATCH") => 
+								print("no macth");
+								print("Please wait for further matches");
+								startClient(),
+							hn ("new", lev) =>
+								let
+									val _ = 1
+									val delta = (getTime() - FirstTime)
+								in
+									if (delta > 2000)
+										then 
+											print("There is an user called Eddard");
+											startClient(getTime())
+										else
+											print("There is no user called Eddard");
+											startClient(getTime())
+								end
+								
+								
+
+
+							]
+in 
+	startClient(getTime())
+end

@@ -1,0 +1,50 @@
+(* Placeholder for the dating-client. Note that in order to communicate 
+   with your server you will need to create the corresponding trustmap *)
+   
+let 
+	val lev = {bob}
+	val name = "bob" raisedTo lev
+	val year = 1995 raisedTo lev
+	val gender = false raisedTo lev
+	val interests = ["bike", "ping pong"] raisedTo lev
+
+	fun agent(lev, name, year, gender, interests) =
+		let 
+			val client_addr = whereis("QmYCCajHboAw2nQWpNTAZ4DZyKr8dhG2q1gbyfc1onmXTj","bob")
+			val _ = send(client_addr, ("new", lev))
+			val _ = print("hello")
+			val a = 1 
+		in
+			if(false) 
+			then 
+				(true, (lev, name, year, gender, interests)) 
+			else 
+				(false, ())
+		end
+
+	val server_addr = whereis ("QmTi7KZUeWG8rgamV2tdU7FdED7GZ8MubPQc6fcpNeyQVJ", "datingServer")
+	val _ = send(server_addr, ("NEWPROFILE", ((lev, name, year, gender, interests), agent, self())))
+	val _ = register("bob", self(), authority)
+	fun startClient() = receive[ 
+							hn ("NEWMATCH", (lev, name, year, gender, interests)) => 
+								let 
+									val _ = print("--------------------------new match---------------------------")
+									val _ = print(name)
+									val _ = print(year)
+									val _ = if(gender) then print("male") else print("female")
+									val _ = print(interests)
+								in
+									startClient()
+								end,
+							hn ("NOMATCH") => 
+								print("no macth");
+								print("Please wait for further matches");
+								startClient(),
+							hn ("new", lev) =>
+								print("new");
+								print(lev);
+								startClient()
+							]
+in 
+	startClient()
+end

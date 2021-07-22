@@ -1,0 +1,6 @@
+let val echo =
+whereis ( "QmTi7KZUeWG8rgamV2tdU7FdED7GZ8MubPQc6fcpNeyQVJ"
+, "echo" )
+val _ = send ( echo , ( "ECHO" , "Hello" , self ()))
+in receive [ hn x => print x ]
+end

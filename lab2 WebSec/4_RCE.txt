@@ -1,0 +1,24 @@
+There are two ways to fix this:
+1. Use a safe library like 'JSON' for serialization and deserialization instead of the vulnerable library cryo.
+
+2. Add authentication for /upload/users:
+post('/upload/users', uploadUsers.single('upload-users'), (req, res) => {
+
+      if (req.isAuthenticated()) {
+    if (!req.user.admin) {
+      req.flash('error', 'Only site administrators are permitted to visit that page.')
+      return res.redirect('back')
+    }
+    next()
+  }else {
+    req.flash('error', 'Only site administrators are permitted to visit that page.')
+    return res.redirect('back')
+  }
+  
+    var newUsers = serializer.parse(req.file.buffer.toString(), { finalize: function(obj) {
+      if (obj.hasOwnProperty('username') && obj.hasOwnProperty('lcUsername')) {
+        obj.img = '/images/profile.png'
+      }
+    }})
+
+So that only administrators can access this url.

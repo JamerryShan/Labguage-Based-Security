@@ -1,0 +1,9 @@
+In the page http://127.0.0.1:3000/register
+Input:
+      Username: ^(a+)+$
+      password: aaaaaaaaaaaaaaaaaaaaaa1
+Fixing:
+function freeFromReg(string) { 
+   return string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
+  }
+Before the input is taken, some special characters will be filtered out, so the regular expression will no longer work, thus preventing the ReDoS attack.

